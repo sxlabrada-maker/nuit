@@ -1,80 +1,129 @@
-
-const carrito = document.querySelector('.carrito');
+const botonesComprar = document.querySelectorAll('.btn-comprar');
+const listaCesta = document.getElementById('lista-cesta');
+const totalElement = document.getElementById('total');
 const contador = document.querySelector('.contador');
-let cantidad = 0;
+const vaciarBtn = document.getElementById('vaciar-cesta-btn');
+let productosEnCesta = JSON.parse(localStorage.getItem('cesta')) || [];
+let suma = parseFloat(localStorage.getItem('totalCesta')) || 0;
 
-carrito.addEventListener('click', () => {
-  cantidad++;
-  contador.textContent = cantidad;
-});
+// =========================================================
+// 2. FUNCIONES PRINCIPALES
+// =========================================================
 
-const nombreTienda = "NUIT";
-let coleccionActiva = "Colección de Otoño";
-let totalProductos = 48;
-let ventasMensuales = 325;
-let precioPromedio = 799.99;
-let tiendaActiva = true;
-let hayDescuentos = false;
-let cestaConProductos = false;
+// Mostrar un pequeño popup visual al agregar producto
+function mostrarPopup(boton) {
+  const popup = document.createElement('span');
+  popup.textContent = 'Agregado ✅';
+  popup.classList.add('popup-agregado');
+  boton.appendChild(popup);
+  setTimeout(() => popup.remove(), 800);
+}
 
-console.log("Nombre de la tienda:", nombreTienda);
-console.log("Colección actual:", coleccionActiva);
-console.log("Total de productos:", totalProductos);
-console.log("Ventas mensuales:", ventasMensuales);
-console.log("Precio promedio:", precioPromedio);
-console.log("¿La tienda está activa?:", tiendaActiva);
-console.log("¿Hay descuentos disponibles?:", hayDescuentos);
-console.log("¿La cesta tiene productos?:", cestaConProductos);
+// Actualizar la lista visual del carrito
+function actualizarCesta() {
+  listaCesta.innerHTML = '';
 
-document.getElementById('loginForm').addEventListener('submit', function(event) {
-  event.preventDefault(); 
-  const welcomePopup = document.getElementById('welcomeMessage');
-  welcomePopup.style.display = 'block'; 
-  
-  // Opcional: Limpia los campos del formulario
-  document.getElementById('email').value = '';
-  document.getElementById('password').value = '';
-});
-
-<script>
-    // Inicializar variables para la cesta
-    const listaCesta = document.getElementById('lista-cesta');
-    const totalElement = document.getElementById('total');
-    const contador = document.querySelector('.contador');
-    const botonesComprar = document.querySelectorAll('.btn-comprar');
-    
-    let suma = 0;
-    let cantidad = 0;
-
-    // Función para manejar el clic en el botón "Comprar"
-    botonesComprar.forEach(boton => { // Se corrige el error de sintaxis 'boton =>' en lugar de 'boton =>'
-        boton.addEventListener('click', (e) => {
-            const producto = e.target.closest('.producto');
-            const nombre = producto.querySelector('.nombre-producto').textContent;
-            const precioTexto = producto.querySelector('.precio').textContent;
-            // Extraer solo el valor numérico del precio (quitando '$', 'MXN', comas, etc.)
-            const precio = parseFloat(precioTexto.replace(/[^0-9.]/g, '')); 
-
-            // 1. Quitar el mensaje "Tu cesta está vacía" si existe
-            const vacio = listaCesta.querySelector('.text-muted');
-            if (vacio) {
-                vacio.remove();
-            }
-
-            // 2. Crear un nuevo ítem en la lista del carrito (offcanvas)
-            const item = document.createElement('li');
-            item.className = 'list-group-item d-flex justify-content-between align-items-center';
-            item.innerHTML = `
-                ${nombre}
-                <span>$${precio.toFixed(2)}</span>
-            `;
-            listaCesta.appendChild(item);
-
-            // 3. Actualizar el total y el contador de la cesta
-            suma += precio;
-            cantidad++;
-            totalElement.textContent = `$${suma.toFixed(2)}`;
-            contador.textContent = cantidad;
-        });
+  if (productosEnCesta.length === 0) {
+    listaCesta.innerHTML = '<li class="text-muted">Tu cesta está vacía.</li>';
+    suma = 0;
+  } else {
+    productosEnCesta.forEach((p, index) => {
+      const item = document.createElement('li');
+      item.className = 'list-group-item d-flex justify-content-between align-items-center';
+      item.innerHTML = `
+        ${p.nombre}
+        <span>$${p.precio.toFixed(2)}</span>
+        <button class="btn btn-sm btn-danger eliminar-item" data-index="${index}">&times;</button>
+      `;
+      listaCesta.appendChild(item);
     });
-</script>
+  }
+
+  totalElement.textContent = $${suma.toFixed(2)};
+  contador.textContent = productosEnCesta.length;
+
+  // Guardar en localStorage
+  localStorage.setItem('cesta', JSON.stringify(productosEnCesta));
+  localStorage.setItem('totalCesta', suma.toString());
+}
+
+// Agregar un producto al carrito
+function agregarProducto(nombre, precio, boton) {
+  productosEnCesta.push({ nombre, precio });
+  suma = productosEnCesta.reduce((sum, p) => sum + p.precio, 0);
+  mostrarPopup(boton);
+  actualizarCesta();
+}
+
+// Eliminar producto individual
+function eliminarProducto(index) {
+  productosEnCesta.splice(index, 1);
+  suma = productosEnCesta.reduce((sum, p) => sum + p.precio, 0);
+  actualizarCesta();
+}
+
+// Vaciar toda la cesta
+function vaciarCesta() {
+  if (confirm("¿Vaciar la cesta completa?")) {
+    productosEnCesta = [];
+    suma = 0;
+    actualizarCesta();
+  }
+}
+
+// =========================================================
+// 3. EVENTOS
+// =========================================================
+
+// Botones “Comprar”
+botonesComprar.forEach(boton => {
+  boton.addEventListener('click', e => {
+    const producto = e.target.closest('.producto');
+    const nombre = producto.querySelector('.nombre-producto').textContent;
+    const precioTexto = producto.querySelector('.precio').textContent;
+    const precio = parseFloat(precioTexto.replace(/[^0-9.]/g, ''));
+
+    agregarProducto(nombre, precio, boton);
+  });
+});
+
+// Eliminar individual
+listaCesta.addEventListener('click', e => {
+  if (e.target.classList.contains('eliminar-item')) {
+    const index = parseInt(e.target.dataset.index);
+    eliminarProducto(index);
+  }
+});
+
+// Vaciar carrito
+if (vaciarBtn) {
+  vaciarBtn.addEventListener('click', vaciarCesta);
+}
+
+// =========================================================
+// 4. CARGA INICIAL
+// =========================================================
+actualizarCesta();
+
+// =========================================================
+// 5. CSS opcional para popup
+// =========================================================
+const style = document.createElement('style');
+style.textContent = `
+.popup-agregado {
+  position: absolute;
+  top: -10px;
+  right: 0;
+  background: #222;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  animation: aparecer 0.8s ease;
+}
+@keyframes aparecer {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+`;
+document.head.appendChild(style);
