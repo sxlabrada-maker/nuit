@@ -7,8 +7,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NUIT | Mujer</title>
     <link rel="stylesheet" href="estilos.css" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
-    integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+
     <meta name="description" content="Moda de diseñador para el hogar - Ropa, accesorios y calzado.">
 
 
@@ -197,11 +199,11 @@
           <!-- Acciones -->
           <div class="acciones">
             <a href="login.html" class="boton-sesion">INICIAR SESION</a>
-            <div class="carrito">
+            <div class="carrito" data-bs-toggle="offcanvas" data-bs-target="#offcanvasCesta" aria-controls="offcanvasCesta" style="cursor: pointer;">
               <img src="cesta-icono.jpg" alt="Carrito">
               <span class="contador">0</span>
             </div>
-          </div>    
+          </div>   
 </header>
 </body>
 <body
@@ -262,11 +264,6 @@
     <a href="index.html" class="custom-button">← Volver al Inicio</a>
 </div>
 
-
-
-
-
-
 <footer>
     <a href="https://instagram.com" target="_blank">Instagram</a>
     <div class="footer-content">
@@ -276,8 +273,71 @@
     <p>&copy; 2025 NUIT. Todos los derechos reservados.</p>
 </footer>
 
+<script src="js/cesta.js"></script>
+  
+    <div class="offcanvas offcanvas-end" data-bs-scroll="true" data-bs-backdrop="true" tabindex="-1"
+      id="offcanvasCesta" aria-labelledby="offcanvasCestaLabel">
+      <div class="offcanvas-header">
+          <h5 class="offcanvas-title" id="offcanvasCestaLabel">Tu Cesta </h5>
+          <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"
+              aria-label="Cerrar"></button>
+      </div>
+
+      <div class="offcanvas-body">
+          <ul class="list-group mb-3" id="lista-cesta">
+              <li class="list-group-item text-center text-muted">Tu cesta está vacía</li>
+          </ul>
+
+          <div class="d-flex justify-content-between mt-3">
+              <strong>Total:</strong> <span id="total">$0.00</span>
+          </div>
+
+          <button class="btn btn-dark w-100 mt-3">Finalizar compra</button>
+      </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+      const listaCesta = document.getElementById('lista-cesta');
+      const totalElement = document.getElementById('total');
+      const contador = document.querySelector('.contador');
+      const botonesComprar = document.querySelectorAll('.btn-comprar');
+      
+      let suma = 0;
+      let cantidad = 0;
+
+      botonesComprar.forEach(boton => {
+          boton.addEventListener('click', (e) => {
+              const producto = e.target.closest('.product-card'); // Usa .product-card aquí
+              const nombre = producto.querySelector('.product-title').textContent;
+              const precioTexto = producto.querySelector('.product-price').textContent;
+              // Extraer solo el valor numérico del precio
+              const precio = parseFloat(precioTexto.replace(/[^0-9.]/g, '')); 
+
+              // 1. Quitar el mensaje "Tu cesta está vacía" si existe
+              const vacio = listaCesta.querySelector('.text-muted');
+              if (vacio) {
+                  vacio.remove();
+              }
+
+              // 2. Crear un nuevo ítem en la lista del carrito (offcanvas)
+              const item = document.createElement('li');
+              item.className = 'list-group-item d-flex justify-content-between align-items-center';
+              item.innerHTML = `
+                  ${nombre}
+                  <span>$${precio.toFixed(2)}</span>
+              `;
+              listaCesta.appendChild(item);
+
+              // 3. Actualizar el total y el contador de la cesta
+              suma += precio;
+              cantidad++;
+              totalElement.textContent = `$${suma.toFixed(2)}`;
+              contador.textContent = cantidad;
+          });
+      });
+  </script>
 
 </body>
-
-
 </html>
